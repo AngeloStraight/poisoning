@@ -13,7 +13,6 @@ class Poison():
         self.poison_points = []
 
     def show_points(self):
-        print("size of points: ", len(self.points))
         for p in self.points:
             print(p)
 
@@ -21,7 +20,6 @@ class Poison():
         return self.poison_points
         
     def show_poison_points(self):
-        print("size of poison: ", len(self.poison_points))
         for p in self.poison_points:
             print(p)
 
@@ -39,12 +37,14 @@ class Poison():
 
     def set_vertices(self):
         """ exclude the vertices with negative x,y values """
-        vertices = self.vor.vertices.tolist()
+        vertices_n = self.vor.vertices.tolist()
         self.vertices = []
-        for i in range(len(vertices)):
+        for i in range(len(vertices_n)):
             """ only consider vertices in range 0-100"""
-            if not (vertices[i][0] < 0 or vertices[i][1] < 0 or vertices[i][0] > 100 or vertices[i][1] > 100):
-                self.vertices.append(vertices[i])
+            #if not (vertices_n[i][0] < 0 or vertices_n[i][1] < 0 or vertices_n[i][0] > 100 or vertices_n[i][1] > 100):
+                #self.vertices.append(vertices_n[i])
+            print("vertices: ", vertices_n[i])
+            self.vertices.append(vertices_n[i])
 
     def anti_gonzalaz(self):
         for i in range(self.m):
@@ -62,12 +62,12 @@ class Poison():
         min_d = sys.maxsize
         self.set_vertices()
         if (len(self.corners) > 0):
-            vertices = self.vertices + self.corners # when looking for poison position, consider the vertices and corners of space
+            self.vertices = self.vertices + self.corners # when looking for poison position, consider the vertices and corners of space
 
         """ find the min distance between all points and vertices """
-        for i in range(len(vertices)):
+        for i in range(len(self.vertices)):
             for j in range(len(self.points)):
-                dist_p_v = math.dist(self.points[j], vertices[i])
+                dist_p_v = math.dist(self.points[j], self.vertices[i])
                 if  dist_p_v < min_d:
                     min_d = dist_p_v
             min_dis_v.append(min_d)
@@ -80,6 +80,6 @@ class Poison():
             if min_dis_v[i] > max_dist:
                 max_dist = min_dis_v[i]
                 index = i
-        self.points.append(vertices[index])
-        self.poison_points.append(vertices[index])
-        self.remove_corner()
+        self.points.append(self.vertices[index])
+        self.poison_points.append(self.vertices[index])
+        #self.remove_corner()

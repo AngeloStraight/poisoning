@@ -18,6 +18,12 @@ class Cluster:
                     f_radius = curr_radius
             self.radius = f_radius
 
+    def get_radius(self):
+        return self.radius
+
+    def get_center(self):
+        return self.center
+
 
 
 class KCenter():
@@ -30,24 +36,34 @@ class KCenter():
         self.poison_points = poison
 
     def show_points(self):
-        print("size of points gonzalaz: ", len(self.points))
         for p in self.points:
             print(p)
 
     def show_centers(self):
-        print("size of centers: ", len(self.centers))
         for c in self.centers:
             print(c)
 
     def set_radius(self):
         for cl in self.clusters:
             cl.set_radius()
-            print("Center: ",cl.center, " With Radius: ", cl.radius)
+
+    def get_radius(self):
+        radius = sys.maxsize
+        for cl in self.clusters:
+            if cl.radius > 0 and cl.radius < radius:
+                radius = cl.radius
+        return radius
 
     def init_clusters(self):
         """ create the clusters """
         for i in range(len(self.centers)):
             self.clusters.append(Cluster(self.centers[i]))
+
+    def get_clusters(self):
+        return self.clusters
+
+    def get_centers(self):
+        return self.centers
 
     def assign_points(self):
         """ assign points to clusters """
@@ -67,7 +83,7 @@ class KCenter():
         """ Return the index of the furthest """
         index = 0
         max_dist = math.dist(self.points[0], p1)
-        for i in range(1,len(self.points)):
+        for i in range(len(self.points)):
             new_dist = math.dist(self.points[i], p1)
             if (new_dist > max_dist):
                 max_dist = new_dist
@@ -75,6 +91,9 @@ class KCenter():
         return index
 
     def show(self):
+
+        fig, ax = plt.subplots()
+        
         """ put x coordinates and y coordinates into arrays to plot the points """
         dev_x = []
         dev_y = []
@@ -97,31 +116,52 @@ class KCenter():
             p_y.append(poison[1])
 
         plt.scatter(dev_x, dev_y)            # plot all the points.
-        plt.scatter(p_x, p_y, color='g')     # plot the poison points. color them green.
-        plt.scatter(c_x, c_y, color='r')     # plot the centers. color them red.
+        plt.scatter(p_x, p_y, color='g')    # plot the poison points. color them green.
+
+       # for cluster in self.clusters:
+        #     ax.add_patch(plt.Circle(cluster.center, radius=0.3, color=(0.1,0.5,0.1,0.3)))
+         #   plt.scatter(cluster.center[0], cluster.center[1], marker = "o", s = 1000*cluster.radius, alpha = 0.25)     # plot the centers. color them red.
+
+        # to color the centers red
+        plt.scatter(c_x, c_y, color='r')
+
+        colors = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+        for c in self.clusters:
+            ax.add_patch(plt.Circle(c.center, radius=c.radius, color=(colors[random.randint(0, 9)] ,colors[random.randint(0, 9)],colors[random.randint(0, 9)],0.3)))
+        ax.axis('equal')
+        ax.margins(0)
+    
         plt.show()
+        #fname = str(random.randint(0, 100000)) + ".png"
+        #fig.savefig(fname, dpi=fig.dpi)
 
 
     def gonzalez(self):
         """ gonzalez"""
+        if (self.k < 1):
+            return
+
         p = self.points.pop(random.randint(0, len(self.points)-1))    # first point is random
         self.centers.append(p)
+        if (self.k == 1):
+            print("only one point: ", self.k, self.centers[0])
+            self.assign_points()
+            return
+            
         index = self.furthest_point(p)                        # second point is point furthest from first point
         sec_pt = self.points.pop(index)
         self.centers.append(sec_pt)
-        dist_arr = []
+        
         while len(self.centers) < self.k:
+            dist_arr = [0] * len(self.points)
             for i in range(len(self.centers)):
-                min_dist = (sys.maxsize, -1)              # tuple (distance, index)
                 for j in range(len(self.points)):
-                    curr_dist = math.dist(self.centers[i], self.points[j])
-                    if curr_dist < min_dist[0]:
-                        min_dist = (curr_dist, j)        # set smallest distance and the index
-                dist_arr.append(min_dist)
+                    dist_arr[j] = dist_arr[j] + math.dist(self.centers[i], self.points[j])
             max_dist = (-1, -1)
-            for i in range(len(dist_arr)):               # now find the max of all the min distance. min-max problem
-                if dist_arr[i][0] > max_dist[0]:
-                    max_dist = dist_arr[i]
+            for i in range(len(dist_arr)):
+                if dist_arr[i] > max_dist[0]:
+                    max_dist = (dist_arr[i], i)
             new_center = self.points.pop(max_dist[1])    # add the new center
             self.centers.append(new_center)
-            self.assign_points()
+        self.assign_points()
